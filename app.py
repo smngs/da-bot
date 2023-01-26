@@ -10,6 +10,8 @@ from datetime import datetime
 import pytz
 from typing import Tuple
 
+import openai
+
 def get_routes(user: str) -> Tuple[str, str, str, int]:
     if (user == 'negino_13'):
         return ("上智大学中央図書館", "神田", "与野", 2)
@@ -43,6 +45,20 @@ def get_route_picture(target_url: str, file_path: str):
         f.write(png)
 
     driver.close()
+
+class AIChat:
+    def __init__(self):
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
+
+    def response(self, user_input):
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=user_input,
+            max_tokens=1024,
+            temperature=0.5,
+        )
+
+        return response['choices'][0]['text']
 
 # --- TODO: ここでファイル分割 ---
 
@@ -98,5 +114,14 @@ async def on_message(message: discord.Message):
                 location=args[5]
             )
             await message.channel.send(new_event.url)
+
+    if message.content.startswith('chat'):
+        args = message.content.split()
+        if len(args) < 2 or args[1] == "help":
+            await message.channel.send("chat <prompt>", delete_after=10)
+        else:
+            chatai = AIChat()
+            response = chatai.response(args[1])
+            await message.channel.send(response)
 
 client.run(os.environ.get('DISCORD_API_KEY'))

@@ -14,6 +14,6 @@ WORKDIR /root/src
 RUN pacman -Syu --noconfirm && \
   pacman -S --noconfirm vim less python3 python-pip chromium noto-fonts noto-fonts-cjk noto-fonts-emoji
 
-RUN pip install --upgrade pip pytz
+RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 RUN pip install -r requirements.txt
