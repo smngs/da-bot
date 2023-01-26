@@ -71,9 +71,9 @@ async def on_message(message: discord.Message):
     if message.content.startswith("経路"):
         args = message.content.split()
         if len(args) < 2 or args[1] == "help":
-            await message.channel.send("経路", delete_after=10)
+            await message.channel.send("経路 <from_station> <to_station>", delete_after=10)
         else:
-            url = get_route_url(args[1], args[3], args[2])
+            url = get_route_url(args[1], "", args[2])
             get_route_picture(url, './test.png')
             await message.channel.send(url, file=discord.File("./test.png"))
 
@@ -83,7 +83,7 @@ async def on_message(message: discord.Message):
     if message.content.startswith('event'):
         args = message.content.split(",")
         if len(args) < 5 or args[1] == "help":
-            await message.channel.send("event <name> <description> <start_time> <end_time> <location_url>", delete_after=10)
+            await message.channel.send("event,<name>,<description>,<start_time>,<end_time>,<location_url>", delete_after=10)
         else:
             jst = pytz.timezone("Japan")
             start_time = datetime.strptime(args[3], "%Y/%m/%d %H:%M:%S").replace(tzinfo=jst)
