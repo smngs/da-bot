@@ -1,30 +1,35 @@
 import os
 import discord
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from typing import List, Tuple
 
-def get_routes(user: str) -> Tuple[str, str, str]:
+def get_routes(user: str) -> Tuple[str, str, str, int]:
     if (user == 'negino_13'):
-        return ("四ツ谷", "神田", "与野")
+        return ("四ツ谷", "神田", "与野", 2)
     elif (user == 'bata_yas'):
-        return ("四ツ谷", "渋谷", "元町・中華街")
+        return ("四ツ谷", "渋谷", "元町・中華街", 0)
     elif (user == 'mrmapler'):
-        return ("四ツ谷", "永田町", "江田(神奈川県)")
+        return ("四ツ谷", "永田町", "江田(神奈川県)", 0)
     elif (user == 'detteiu55'):
-        return ("四ツ谷", "渋谷", "妙蓮寺")
+        return ("四ツ谷", "渋谷", "妙蓮寺", 0)
     else:
-        return ("", "", "")
+        return ("", "", "", 0) # ｺﾞﾐｶｽ
 
-def get_route_url(from_station: str, via_station: str, to_station: str):
-    route_url = "https://transit.yahoo.co.jp/search/print?from="+from_station+"&flatlon=&to="+ to_station + "&via=" + via_station
+def get_route_url(from_station: str, via_station: str, to_station: str, priority_mode: int=0):
+    '''
+    priority_mode: 0: 到着時刻順, 1: 料金の安い順, 2: 乗換回数順
+    '''
+    route_url = "https://transit.yahoo.co.jp/search/print?from="+from_station+"&flatlon=&to="+ to_station + "&via=" + via_station + "&s=" + str(priority_mode)
     return route_url
 
 def get_route_picture(target_url: str, file_path: str):
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
 
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(options=options, service=Service("/usr/bin/chromedriver"))
     driver.get(target_url)
 
     png = driver.find_element(By.ID, 'srline').screenshot_as_png
