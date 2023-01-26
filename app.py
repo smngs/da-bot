@@ -7,13 +7,13 @@ from typing import List, Tuple
 
 def get_routes(user: str) -> Tuple[str, str, str, int]:
     if (user == 'negino_13'):
-        return ("四ツ谷", "神田", "与野", 2)
+        return ("上智大学中央図書館", "神田", "与野", 2)
     elif (user == 'bata_yas'):
-        return ("四ツ谷", "渋谷", "元町・中華街", 0)
+        return ("上智大学中央図書館", "渋谷", "元町・中華街", 0)
     elif (user == 'mrmapler'):
-        return ("四ツ谷", "永田町", "江田(神奈川県)", 0)
+        return ("上智大学中央図書館", "永田町", "江田(神奈川県)", 0)
     elif (user == 'detteiu55'):
-        return ("四ツ谷", "渋谷", "妙蓮寺", 0)
+        return ("上智大学中央図書館", "渋谷", "妙蓮寺", 0)
     else:
         return ("", "", "", 0) # ｺﾞﾐｶｽ
 
