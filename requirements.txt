@@ -1,2 +1,4 @@
 discord
 selenium
+openai
+pytz

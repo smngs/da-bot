@@ -1,9 +1,16 @@
 import os
 import discord
+from discord import Guild
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from typing import List, Tuple
+
+from datetime import datetime
+import pytz
+from typing import Tuple
+
+import openai
 
 def get_routes(user: str) -> Tuple[str, str, str, int]:
     if (user == 'negino_13'):
@@ -39,21 +46,82 @@ def get_route_picture(target_url: str, file_path: str):
 
     driver.close()
 
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print('Logged on as', self.user)
+class AIChat:
+    def __init__(self):
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
 
-    async def on_message(self, message: discord.Message):
-        # don't respond to ourselves
-        if message.author == self.user:
-            return
+    def response(self, user_input):
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=user_input,
+            max_tokens=1024,
+            temperature=0.5,
+        )
 
-        if message.content == '帰宅':
-            url = get_route_url(*get_routes(message.author.display_name))
+        return response['choices'][0]['text']
+
+# --- TODO: ここでファイル分割 ---
+
+events = discord.ScheduledEvent
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guild_scheduled_events = True
+
+client = discord.Client(intents=intents)
+
+@client.event
+async def on_ready():
+    print('Logged on as', client.user)
+
+@client.event
+async def on_message(message: discord.Message):
+    # don't respond to ourselves
+    if message.author.bot:
+        return
+
+    if message.content == '帰宅':
+        url = get_route_url(*get_routes(message.author.display_name))
+        get_route_picture(url, './test.png')
+        await message.channel.send(url, file=discord.File("./test.png"))
+
+    if message.content.startswith("経路"):
+        args = message.content.split()
+        if len(args) < 2 or args[1] == "help":
+            await message.channel.send("経路 <from_station> <to_station>", delete_after=10)
+        else:
+            url = get_route_url(args[1], "", args[2])
             get_route_picture(url, './test.png')
             await message.channel.send(url, file=discord.File("./test.png"))
 
-intents = discord.Intents.default()
-intents.message_content = True
-client = MyClient(intents=intents)
+    if message.content == 'ping':
+        await message.channel.send("pong")
+
+    if message.content.startswith('event'):
+        args = message.content.split(",")
+        if len(args) < 5 or args[1] == "help":
+            await message.channel.send("event,<name>,<description>,<start_time>,<end_time>,<location_url>", delete_after=10)
+        else:
+            jst = pytz.timezone("Japan")
+            start_time = datetime.strptime(args[3], "%Y/%m/%d %H:%M:%S").replace(tzinfo=jst)
+            end_time = datetime.strptime(args[4], "%Y/%m/%d %H:%M:%S").replace(tzinfo=jst)
+            new_event = await Guild.create_scheduled_event(
+                self=message.guild,
+                name=args[1], 
+                description=args[2], 
+                start_time=start_time,
+                end_time=end_time,
+                entity_type=discord.EntityType.external,
+                location=args[5]
+            )
+            await message.channel.send(new_event.url)
+
+    if message.content.startswith('chat'):
+        args = message.content.split()
+        if len(args) < 2 or args[1] == "help":
+            await message.channel.send("chat <prompt>", delete_after=10)
+        else:
+            chatai = AIChat()
+            response = chatai.response(args[1])
+            await message.channel.send(response)
+
 client.run(os.environ.get('DISCORD_API_KEY'))
