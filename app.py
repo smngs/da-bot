@@ -52,7 +52,11 @@ async def send_ping(ctx: discord.Interaction, number: int):
 # -----
 @tree.command(name="home", guild=guild, description="帰宅経路を検索します．")
 async def send_home(ctx: discord.Interaction):
-    await ctx.response.send_message(route.get_route(ctx.user.display_name))
+    file_path = "./upload.png"
+    await ctx.response.send_message(
+        route.get_route(ctx.user.display_name, file_path),
+        file=discord.File(file_path)
+    )
 
 # -----
 @tree.command(name="route", guild=guild, description="出発地から目的地までの経路を検索します．")
