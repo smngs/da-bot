@@ -1,66 +1,8 @@
 import os
 import discord
-from discord import Guild
+from typing import List, Tuple
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-
-from datetime import datetime
-import pytz
-from typing import Tuple
-
-import openai
-
-def get_routes(user: str) -> Tuple[str, str, str, int]:
-    if (user == 'negino_13'):
-        return ("上智大学中央図書館", "神田", "与野", 2)
-    elif (user == 'bata_yas'):
-        return ("上智大学中央図書館", "渋谷", "元町・中華街", 0)
-    elif (user == 'mrmapler'):
-        return ("上智大学中央図書館", "永田町", "江田(神奈川県)", 0)
-    elif (user == 'detteiu55'):
-        return ("上智大学中央図書館", "渋谷", "妙蓮寺", 0)
-    else:
-        return ("", "", "", 0) # ｺﾞﾐｶｽ
-
-def get_route_url(from_station: str, via_station: str, to_station: str, priority_mode: int=0):
-    '''
-    priority_mode: 0: 到着時刻順, 1: 料金の安い順, 2: 乗換回数順
-    '''
-    route_url = "https://transit.yahoo.co.jp/search/print?from="+from_station+"&flatlon=&to="+ to_station + "&via=" + via_station + "&s=" + str(priority_mode)
-    return route_url
-
-def get_route_picture(target_url: str, file_path: str):
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-
-    driver = webdriver.Chrome(options=options, service=Service("/usr/bin/chromedriver"))
-    driver.get(target_url)
-
-    png = driver.find_element(By.ID, 'srline').screenshot_as_png
-
-    with open(file_path, 'wb') as f:
-        f.write(png)
-
-    driver.close()
-
-class AIChat:
-    def __init__(self):
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
-
-    def response(self, user_input):
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=user_input,
-            max_tokens=1024,
-            temperature=0.5,
-        )
-
-        return response['choices'][0]['text']
-
-# --- TODO: ここでファイル分割 ---
+from modules import route, event, aichat
 
 events = discord.ScheduledEvent
 intents = discord.Intents.default()
@@ -68,60 +10,71 @@ intents.message_content = True
 intents.guild_scheduled_events = True
 
 client = discord.Client(intents=intents)
+tree = discord.app_commands.CommandTree(client)
+
+DISCORD_API_KEY = os.environ.get("DISCORD_API_KEY")
+DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
+
+guild = discord.Object(id=DISCORD_SERVER_KEY)
+
+# -----
+@tree.command(name="hello", guild=guild, description="ユーザに対して華麗に挨拶します．")
+async def send_hello(ctx: discord.Interaction, user_name: str):
+    await ctx.response.send_message("Hello, World.", ephemeral=True)
+    await ctx.followup.send(f"{user_name}-san!")
+
+# -----
+@tree.command(name="ping", guild=guild, description="疎通確認のための ping を送信します．")
+async def send_ping(ctx: discord.Interaction, number: int):
+    await ctx.response.send_message(f'ping: {number}', ephemeral=True)
+
+# -----
+@tree.command(name="home", guild=guild, description="帰宅経路を検索します．")
+async def send_home(ctx: discord.Interaction):
+    await ctx.response.send_message(route.get_route(ctx.user.display_name))
+
+# -----
+@tree.command(name="route", guild=guild, description="出発地から目的地までの経路を検索します．")
+@discord.app_commands.describe(
+    from_station="出発地を指定します．", 
+    to_station="目的地を指定します．", 
+    via_station="経由地を指定します．"
+)
+async def send_route(ctx: discord.Interaction, from_station: str, to_station: str, via_station: str=""):
+    file_path = "./upload.png"
+    await ctx.response.send_message(
+        route.get_route(ctx.user.display_name, file_path, from_station, to_station, via_station), 
+        file=discord.File(file_path)
+    )
+
+# -----
+@tree.command(name="event", guild=guild, description="新しいイベントをサーバに登録します．")
+@discord.app_commands.describe(
+    name="イベントの名前を指定します．", 
+    description="イベントの目的を指定します．", 
+    start_time="開始日時を指定します (YYYY-MM-DD HH:MM:SS)．", 
+    end_time="終了日時を指定します (YYYY-MM-DD HH:MM:SS)．", 
+    location="実施場所（URL）を指定します．"
+)
+async def send_event(ctx: discord.Interaction, name: str, description: str, start_time: str, end_time: str, location: str):
+    new_event = await event.create_event(ctx.guild, name, description, start_time, end_time, location)
+    await ctx.response.send_message(new_event.url)
+
+# -----
+@tree.command(name="chat", guild=guild, description="GPT-3 とおしゃべりします．")
+@discord.app_commands.describe(
+    prompt="GPT-3 に話しかける内容です．"
+)
+async def send_chat(ctx: discord.Interaction, prompt: str):
+    await ctx.response.defer()
+    await ctx.followup.send(embed=aichat.generate_embed(prompt, ctx.user))
+    async with ctx.channel.typing():
+        answer = aichat.trigger_chat(prompt)
+    await ctx.followup.send(answer)
 
 @client.event
 async def on_ready():
     print('Logged on as', client.user)
+    await tree.sync(guild=guild)
 
-@client.event
-async def on_message(message: discord.Message):
-    # don't respond to ourselves
-    if message.author.bot:
-        return
-
-    if message.content == '帰宅':
-        url = get_route_url(*get_routes(message.author.display_name))
-        get_route_picture(url, './test.png')
-        await message.channel.send(url, file=discord.File("./test.png"))
-
-    if message.content.startswith("経路"):
-        args = message.content.split()
-        if len(args) < 2 or args[1] == "help":
-            await message.channel.send("経路 <from_station> <to_station>", delete_after=10)
-        else:
-            url = get_route_url(args[1], "", args[2])
-            get_route_picture(url, './test.png')
-            await message.channel.send(url, file=discord.File("./test.png"))
-
-    if message.content == 'ping':
-        await message.channel.send("pong")
-
-    if message.content.startswith('event'):
-        args = message.content.split(",")
-        if len(args) < 5 or args[1] == "help":
-            await message.channel.send("event,<name>,<description>,<start_time>,<end_time>,<location_url>", delete_after=10)
-        else:
-            jst = pytz.timezone("Japan")
-            start_time = datetime.strptime(args[3], "%Y/%m/%d %H:%M:%S").replace(tzinfo=jst)
-            end_time = datetime.strptime(args[4], "%Y/%m/%d %H:%M:%S").replace(tzinfo=jst)
-            new_event = await Guild.create_scheduled_event(
-                self=message.guild,
-                name=args[1], 
-                description=args[2], 
-                start_time=start_time,
-                end_time=end_time,
-                entity_type=discord.EntityType.external,
-                location=args[5]
-            )
-            await message.channel.send(new_event.url)
-
-    if message.content.startswith('chat'):
-        args = message.content.split()
-        if len(args) < 2 or args[1] == "help":
-            await message.channel.send("chat <prompt>", delete_after=10)
-        else:
-            chatai = AIChat()
-            response = chatai.response(args[1])
-            await message.channel.send(response)
-
-client.run(os.environ.get('DISCORD_API_KEY'))
+client.run(DISCORD_API_KEY)
