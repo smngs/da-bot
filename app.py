@@ -23,6 +23,27 @@ async def send_hello(ctx: discord.Interaction, user_name: str):
     await ctx.response.send_message("Hello, World.", ephemeral=True)
     await ctx.followup.send(f"{user_name}-san!")
 
+@tree.command(name="help", guild=guild, description="Bot のヘルプを表示します．")
+async def send_help(ctx: discord.Interaction):
+    embed = discord.Embed(
+        title="@da-bot Help",
+        color=0x80A89C,
+    )
+    embed.set_author(
+        name=client.user.display_name
+    )
+    embed.add_field(name="`/hello`", value="ユーザに対して華麗に挨拶します．", inline=False)
+    embed.add_field(name="`/chat`", value="GPT-3 とおしゃべりします．", inline=False)
+    embed.add_field(name="`/home`", value="帰宅経路を検索します．", inline=False)
+    embed.add_field(name="`/route`", value="出発地から目的地までの経路を検索します．", inline=False)
+    embed.add_field(name="`/event`", value="新しいイベントをサーバに登録します．", inline=False)
+    embed.set_footer(
+        text="https://github.com/smngs/da-bot",
+        icon_url="https://github.com/smngs.png"
+    )
+
+    await ctx.response.send_message(embed=embed, ephemeral=True)
+
 # -----
 @tree.command(name="ping", guild=guild, description="疎通確認のための ping を送信します．")
 async def send_ping(ctx: discord.Interaction, number: int):
