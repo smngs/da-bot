@@ -11,3 +11,7 @@ services:
       - ./secret.env
     command:
       python app.py
+  voicevox:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    ports:
+      - 50021:50021

@@ -1,5 +1,6 @@
 secret.env
 upload.png
+output.wav
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

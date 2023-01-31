@@ -2,12 +2,15 @@ import os
 import discord
 from typing import List, Tuple
 
-from modules import route, event, aichat
+from modules import route, event, aichat, read
 
 events = discord.ScheduledEvent
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guild_scheduled_events = True
+
+voice_channel: discord.VoiceChannel 
+watch_channel: discord.TextChannel
 
 client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
@@ -93,9 +96,40 @@ async def send_chat(ctx: discord.Interaction, prompt: str):
         answer = aichat.trigger_chat(prompt)
     await ctx.followup.send(answer)
 
+# -----
+@tree.command(name="speak", guild=guild, description="チャンネルに投稿された音声を読み上げます．")
+@discord.app_commands.describe(
+    option="オプションを指定します．",
+    channel="監視するチャンネルを指定します．"
+)
+@discord.app_commands.choices(
+    option = [
+        discord.app_commands.Choice(name="join", value="join"),
+        discord.app_commands.Choice(name="exit", value="exit")
+    ]
+)
+async def send_chat(ctx: discord.Interaction, option: str, channel: discord.TextChannel=None):
+    global voice_channel
+    global watch_channel
+    if (option == "join"):
+        watch_channel = channel
+        voice_channel = await discord.VoiceChannel.connect(ctx.user.voice.channel)
+    elif (option == "exit"):
+        voice_client = ctx.guild.voice_client
+        await voice_client.disconnect()
+
 @client.event
 async def on_ready():
     print('Logged on as', client.user)
     await tree.sync(guild=guild)
+
+@client.event
+async def on_message(message: discord.Message):
+    global voice_channel
+    global watch_channel
+    if (message.channel.name == watch_channel.name):
+        read.synthesis(message.content, "./output.wav")
+        source = discord.FFmpegPCMAudio("./output.wav")
+        voice_channel.play(source)
 
 client.run(DISCORD_API_KEY)

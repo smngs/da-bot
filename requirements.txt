@@ -2,3 +2,4 @@ discord
 selenium
 openai
 pytz
+pynacl
