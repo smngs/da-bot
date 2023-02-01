@@ -40,6 +40,7 @@ async def send_help(ctx: discord.Interaction):
     embed.add_field(name="`/home`", value="帰宅経路を検索します．", inline=False)
     embed.add_field(name="`/route`", value="出発地から目的地までの経路を検索します．", inline=False)
     embed.add_field(name="`/event`", value="新しいイベントをサーバに登録します．", inline=False)
+    embed.add_field(name="`/speak`", value="ずんだもんがテキストチャネルに投稿された内容を VC で読み上げます．", inline=False)
     embed.set_footer(
         text="https://github.com/smngs/da-bot",
         icon_url="https://github.com/smngs.png"
@@ -97,7 +98,7 @@ async def send_chat(ctx: discord.Interaction, prompt: str):
     await ctx.followup.send(answer)
 
 # -----
-@tree.command(name="speak", guild=guild, description="チャンネルに投稿された音声を読み上げます．")
+@tree.command(name="speak", guild=guild, description="チャンネルに投稿された音声を読み上げます．先に VC に入ってからコマンドを実行してください．")
 @discord.app_commands.describe(
     option="オプションを指定します．",
     channel="監視するチャンネルを指定します．"
@@ -111,12 +112,22 @@ async def send_chat(ctx: discord.Interaction, prompt: str):
 async def send_chat(ctx: discord.Interaction, option: str, channel: discord.TextChannel=None):
     global voice_channel
     global watch_channel
+
+    await ctx.response.defer(ephemeral=True)
     if (option == "join"):
         watch_channel = channel
-        voice_channel = await discord.VoiceChannel.connect(ctx.user.voice.channel)
+        if ctx.user.voice == None:
+            await ctx.followup.send(f"先に VC に入ってから，`/join` コマンドを実行してください．")
+        else:
+            voice_channel = await discord.VoiceChannel.connect(ctx.user.voice.channel)
+            await ctx.followup.send(f"ずんだもんが {ctx.user.voice.channel} に入室しました．{channel} に投稿された内容を読み上げます．", ephemeral=True)
+
     elif (option == "exit"):
         voice_client = ctx.guild.voice_client
         await voice_client.disconnect()
+        del voice_channel
+        del watch_channel
+        await ctx.followup.send("ずんだもんが退室しました．", ephemeral=True)
 
 @client.event
 async def on_ready():
@@ -127,9 +138,10 @@ async def on_ready():
 async def on_message(message: discord.Message):
     global voice_channel
     global watch_channel
-    if (message.channel.name == watch_channel.name):
-        read.synthesis(message.content, "./output.wav")
-        source = discord.FFmpegPCMAudio("./output.wav")
-        voice_channel.play(source)
+    if 'voice_channel' in globals():
+        if (message.channel.name == watch_channel.name):
+            read.synthesis(message.content, "./output.wav")
+            source = discord.FFmpegPCMAudio("./output.wav")
+            voice_channel.play(source)
 
 client.run(DISCORD_API_KEY)
