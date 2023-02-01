@@ -23,7 +23,7 @@ def get_route_url(from_station: str, to_station: str, via_station: str, priority
     '''
     priority_mode: 0: 到着時刻順, 1: 料金の安い順, 2: 乗換回数順
     '''
-    route_url = "https://transit.yahoo.co.jp/search/print?from="+from_station+"&flatlon=&to="+ to_station + "&via=" + via_station + "&s=" + str(priority_mode)
+    route_url = f"https://transit.yahoo.co.jp/search/print?from={from_station}&flatlon=&to={to_station}&via={via_station}&s={priority_mode}"
     return route_url
 
 def save_route_screenshot(target_url: str, file_path: str, range_id: str="srline") -> None:
