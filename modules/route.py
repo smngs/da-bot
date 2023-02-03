@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-
+import datetime
 from typing import Tuple
 
 def get_nearest_station(user: str) -> Tuple[str, str, str, int]:
@@ -9,13 +9,13 @@ def get_nearest_station(user: str) -> Tuple[str, str, str, int]:
     みんなの自宅最寄り駅を返します． TODO: そのうち DB などに移す
     '''
     if (user == 'negino_13'): 
-        return ("上智大学中央図書館", "与野", "神田", 2)
+        return ("四ツ谷", "与野", "神田", 2)
     elif (user == 'bata_yas'):
-        return ("上智大学中央図書館", "元町・中華街", "新宿三丁目", 0)
+        return ("四ツ谷", "元町・中華街", "新宿三丁目", 0)
     elif (user == 'mrmapler'):
-        return ("上智大学中央図書館", "江田(神奈川県)", "四ツ谷", 0)
+        return ("四ツ谷", "江田(神奈川県)", "渋谷", 0)
     elif (user == 'detteiu55'):
-        return ("上智大学中央図書館", "妙蓮寺", "新宿三丁目", 0)
+        return ("四ツ谷", "妙蓮寺", "新宿三丁目", 0)
     else:
         return ("", "", "", 0) # ｺﾞﾐｶｽ
 
@@ -23,7 +23,10 @@ def get_route_url(from_station: str, to_station: str, via_station: str, priority
     '''
     priority_mode: 0: 到着時刻順, 1: 料金の安い順, 2: 乗換回数順
     '''
-    route_url = f"https://transit.yahoo.co.jp/search/print?from={from_station}&flatlon=&to={to_station}&via={via_station}&s={priority_mode}"
+    dt = datetime.datetime.now() + datetime.timedelta(minutes=10)
+    year, month, day, hour, minute = dt.year, dt.month, dt.day, dt.hour, dt.minute
+
+    route_url = f"https://transit.yahoo.co.jp/search/print?from={from_station}&flatlon=&to={to_station}&via={via_station}&s={priority_mode}&y={year}&m={str(month).zfill(2)}&d={str(day).zfill(2)}&hh={hour}&m1={minute//10}&m2={minute%10}"
     return route_url
 
 def save_route_screenshot(target_url: str, file_path: str, range_id: str="srline") -> None:
