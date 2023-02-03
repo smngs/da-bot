@@ -2,7 +2,7 @@ import os
 import discord
 from typing import List, Tuple
 
-from modules import route, event, aichat, read
+from modules import route, event, aichat, speak
 
 events = discord.ScheduledEvent
 intents = discord.Intents.default()
@@ -102,36 +102,33 @@ async def send_chat(ctx: discord.Interaction, prompt: str):
     await ctx.followup.send(answer)
 
 # -----
-@tree.command(name="speak", guild=guild, description="チャンネルに投稿された音声を読み上げます．先に VC に入ってからコマンドを実行してください．")
+@tree.command(name="speak-join", guild=guild, description="テキストチャンネルに投稿された音声を読み上げます．先に VC に入ってからコマンドを実行してください．")
 @discord.app_commands.describe(
-    option="オプションを指定します．",
-    channel="監視するチャンネルを指定します．"
+    channel="読み上げ対象のテキストチャンネルを指定します．"
 )
-@discord.app_commands.choices(
-    option = [
-        discord.app_commands.Choice(name="join", value="join"),
-        discord.app_commands.Choice(name="exit", value="exit")
-    ]
-)
-async def send_chat(ctx: discord.Interaction, option: str, channel: discord.TextChannel=None):
+async def send_speak_join(ctx: discord.Interaction, channel: discord.TextChannel):
     global voice_channel
     global watch_channel
 
     await ctx.response.defer(ephemeral=True)
-    if (option == "join"):
-        watch_channel = channel
-        if ctx.user.voice == None:
-            await ctx.followup.send(f"先に VC に入ってから，`/join` コマンドを実行してください．")
-        else:
-            voice_channel = await discord.VoiceChannel.connect(ctx.user.voice.channel)
-            await ctx.followup.send(f"ずんだもんが {ctx.user.voice.channel} に入室しました．{channel} に投稿された内容を読み上げます．", ephemeral=True)
+    watch_channel = channel
+    if ctx.user.voice == None:
+        await ctx.followup.send(f"先に VC に入ってから，`/join` コマンドを実行してください．")
+    else:
+        voice_channel = await discord.VoiceChannel.connect(ctx.user.voice.channel)
+        await ctx.followup.send(f"ずんだもんが {ctx.user.voice.channel} に入室しました．{channel} に投稿された内容を読み上げます．", ephemeral=True)
 
-    elif (option == "exit"):
-        voice_client = ctx.guild.voice_client
-        await voice_client.disconnect()
-        del voice_channel
-        del watch_channel
-        await ctx.followup.send("ずんだもんが退室しました．", ephemeral=True)
+@tree.command(name="speak-exit", guild=guild, description="読み上げ Bot をボイスチャンネルから退室させます．")
+async def send_speak_exit(ctx: discord.Interaction):
+    global voice_channel
+    global watch_channel
+
+    await ctx.response.defer(ephemeral=True)
+    del voice_channel
+    del watch_channel
+    voice_client = ctx.guild.voice_client
+    await voice_client.disconnect()
+    await ctx.followup.send("ずんだもんが退室しました．", ephemeral=True)
 
 @client.event
 async def on_ready():
@@ -144,7 +141,7 @@ async def on_message(message: discord.Message):
     global watch_channel
     if 'voice_channel' in globals():
         if (message.channel.name == watch_channel.name):
-            read.synthesis(message.content, "./output.wav")
+            speak.synthesis(message.content, "./output.wav")
             source = discord.FFmpegPCMAudio("./output.wav")
             voice_channel.play(source)
 
