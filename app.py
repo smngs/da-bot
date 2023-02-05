@@ -2,7 +2,7 @@ import os
 import discord
 from typing import List, Tuple
 
-from modules import route, event, aichat
+from modules import route, event, aichat, ese_chinese
 
 events = discord.ScheduledEvent
 intents = discord.Intents.default()
@@ -96,6 +96,16 @@ async def send_chat(ctx: discord.Interaction, prompt: str):
     async with ctx.channel.typing():
         answer = aichat.trigger_chat(prompt)
     await ctx.followup.send(answer)
+
+# -----
+@tree.command(name="ese_chinese", guild=guild, description="文章を偽中国語に翻訳します．")
+@discord.app_commands.describe(
+    prompt="偽中国語に翻訳する内容です．"
+)
+async def send_chat(ctx: discord.Interaction, prompt: str):
+    await ctx.response.defer()
+    await ctx.followup.send(embed=ese_chinese.generate_embed(prompt, ctx.user))
+    await ctx.followup.send(ese_chinese.to_esechinese(prompt))
 
 @client.event
 async def on_ready():

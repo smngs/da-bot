@@ -2,3 +2,5 @@ discord
 selenium
 openai
 pytz
+mecab-python3
+unidic-lite
