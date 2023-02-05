@@ -65,24 +65,23 @@ def to_esechinese(text: str) -> str:
         # 文末の処理
         if (i == len(token_list)-1) or (token_list[i+1]["word"] == "。") or (token_list[i+1]["word"] == "．"):
             # 助動詞
-            if (types[0] == "助動詞"):
-                if (word == "する") or (word == "ます"):
-                    prime = word + "也"
-                elif (word == "たい"):
-                    prime = word + "希望"
-                if (word == "ない"):
-                    prime = word + "無"
-                else:
-                    prime = word + "了"
-
-            # 形容詞
-            elif (types[0] == "形容詞"):
-                if (word == "ない"):
-                    prime = word + "否"
-
-            # 疑問符の処理
-            if ((word == "？") or (word == "?")) and (types[0] == "補助記号"):
-                prime = "如何？"
+            match type:
+                case "助動詞":
+                    if (word == "する") or (word == "ます"):
+                        prime = word + "也"
+                    elif (word == "たい"):
+                        prime = word + "希望"
+                    elif (word == "ない"):
+                        prime = word + "無"
+                    else:
+                        prime = word + "了"
+                case "形容詞":
+                    if (word == "ない"):
+                        prime = word + "否"
+                case "補助記号": 
+                    # 感動詞
+                    if ((word == "？") or (word == "?")):
+                        prime = "如何？"
 
         chinese_list.append(hira_to_blank(prime))
 
