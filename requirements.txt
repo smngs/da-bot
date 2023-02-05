@@ -3,3 +3,5 @@ selenium
 openai
 pytz
 pynacl
+mecab-python3
+unidic-lite
