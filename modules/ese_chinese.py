@@ -65,7 +65,7 @@ def to_esechinese(text: str) -> str:
         # 文末の処理
         if (i == len(token_list)-1) or (token_list[i+1]["word"] == "。") or (token_list[i+1]["word"] == "．"):
             # 助動詞
-            match type:
+            match types[0]:
                 case "助動詞":
                     if (word == "する") or (word == "ます"):
                         prime = word + "也"
