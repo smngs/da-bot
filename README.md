@@ -10,7 +10,13 @@ Discord bot for **da**-server!
 ## Usage
 
 ```
-$ touch secret.env && echo "DISCORD_API_KEY=hogehoge" >> secret.env
+$ touch .env
 $ docker-compose build
 $ docker-compose up
 ```
+
+### Environment Variables
+
+- `DISCORD_API_KEY'
+- `DISCORD_SERVER_KEY'
+- `OPENAI_API_KEY`

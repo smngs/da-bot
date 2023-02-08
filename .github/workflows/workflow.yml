@@ -1,0 +1,24 @@
+name: Deploy to server (procyon)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: self-hosted
+    environment:
+      name: release
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: docker-compose up 
+        run: |
+          docker-compose build && docker-compose up -d --force-recreate
+        env:
+          DISCORD_API_KEY: ${{ secrets.DISCORD_API_KEY }}
+          DISCORD_SERVER_KEY: ${{ secrets.DISCORD_SERVER_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
