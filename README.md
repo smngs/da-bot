@@ -17,6 +17,6 @@ $ docker-compose up
 
 ### Environment Variables
 
-- `DISCORD_API_KEY'
-- `DISCORD_SERVER_KEY'
+- `DISCORD_API_KEY`
+- `DISCORD_SERVER_KEY`
 - `OPENAI_API_KEY`
