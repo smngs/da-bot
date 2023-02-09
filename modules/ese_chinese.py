@@ -1,6 +1,14 @@
+import os
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+# サーバコマンドを設定するギルド
+DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
+guild = discord.Object(id=DISCORD_SERVER_KEY)
+
 import MeCab
 import sys
-import discord
 
 def generate_embed(prompt: str, user: discord.User) -> discord.Embed:
     embed = discord.Embed(
@@ -87,6 +95,19 @@ def to_esechinese(text: str) -> str:
 
     return "".join(chinese_list)
 
+class EseChinese(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
 
-if __name__ == "__main__":
-    print(to_esechinese(sys.argv[1]))
+    @app_commands.command(name="ese-chinese", description="文章を偽中国語に翻訳します．")
+    @app_commands.describe(
+        prompt="偽中国語に翻訳する内容です．"
+    )
+    @app_commands.guilds(guild)
+    async def send_ese_chinese(self, ctx: discord.Interaction, prompt: str):
+        await ctx.response.defer()
+        await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
+        await ctx.followup.send(to_esechinese(prompt))
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(EseChinese(bot))
