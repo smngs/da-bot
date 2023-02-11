@@ -9,8 +9,8 @@ from selenium.webdriver.common.by import By
 import datetime
 from typing import Tuple
 
-# サーバコマンドを設定するギルド
-DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
+from config import DISCORD_SERVER_KEY
+
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 def get_nearest_station(user: str) -> Tuple[str, str, str, int]:

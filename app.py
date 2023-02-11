@@ -2,9 +2,8 @@ import os
 import discord
 from discord.ext import commands
 
-DISCORD_API_KEY = os.environ.get("DISCORD_API_KEY")
-# サーバコマンドを設定するギルド
-DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
+from config import DISCORD_API_KEY, DISCORD_SERVER_KEY
+
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
@@ -14,6 +13,7 @@ COGS = [
     "modules.route",
     "modules.event",
     "modules.speak",
+    "modules.aichat",
     "modules.ese_chinese"
 ]
 
@@ -23,7 +23,7 @@ async def on_ready():
     print('------')
     for cogs in COGS:
         await bot.load_extension(cogs)
-        print("Loaded: {cogs}")
+        print(f"Loaded: {cogs}")
 
     await bot.tree.sync(guild=guild)
 

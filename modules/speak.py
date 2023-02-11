@@ -3,15 +3,15 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# サーバコマンドを設定するギルド
-DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
-guild = discord.Object(id=DISCORD_SERVER_KEY)
-
 import requests
 import json
 import time
 from datetime import datetime
 from collections import deque
+
+from config import DISCORD_SERVER_KEY
+
+guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 def synthesis(text, filename, speaker=1, max_retry=20):
     query_payload = {"text": text, "speaker": speaker}

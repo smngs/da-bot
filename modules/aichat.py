@@ -3,15 +3,15 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# サーバコマンドを設定するギルド
-DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
-guild = discord.Object(id=DISCORD_SERVER_KEY)
-
 import openai
+
+from config import DISCORD_SERVER_KEY, OPENAI_API_KEY
+
+guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 class AIChat:
     def __init__(self):
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        openai.api_key = OPENAI_API_KEY
 
     def response(self, prompt: str):
         response = openai.Completion.create(

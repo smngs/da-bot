@@ -3,8 +3,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# サーバコマンドを設定するギルド
-DISCORD_SERVER_KEY = os.environ.get("DISCORD_SERVER_KEY")
+from config import DISCORD_SERVER_KEY
+
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 class Help(commands.Cog):
