@@ -10,9 +10,9 @@ Discord bot for **da**-server!
 ## Usage
 
 ```
-$ touch .env
-$ docker-compose build
-$ docker-compose up
+$ make env
+$ make build
+$ make up
 ```
 
 ### Environment Variables
