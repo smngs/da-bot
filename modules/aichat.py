@@ -1,10 +1,17 @@
-import openai
 import os
 import discord
+from discord import app_commands
+from discord.ext import commands
+
+import openai
+
+from config import DISCORD_SERVER_KEY, OPENAI_API_KEY
+
+guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 class AIChat:
     def __init__(self):
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        openai.api_key = OPENAI_API_KEY
 
     def response(self, prompt: str):
         response = openai.Completion.create(
@@ -31,7 +38,23 @@ def generate_embed(prompt: str, user: discord.User) -> discord.Embed:
         name=user.display_name,
         icon_url=user.avatar.url,
     )
-    # embed.add_field(name="Prompt", value=prompt, inline=False)
-    # embed.add_field(name="Answer", value=answer, inline=False)
-
     return embed
+
+class Chat(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+
+    @app_commands.command(name="chat", description="GPT-3 とおしゃべりします．")
+    @app_commands.guilds(guild)
+    @discord.app_commands.describe(
+        prompt="GPT-3 に話しかける内容です．"
+    )
+    async def send_chat(self, ctx: discord.Interaction, prompt: str):
+        await ctx.response.defer()
+        await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
+        async with ctx.channel.typing():
+            answer = trigger_chat(prompt)
+        await ctx.followup.send(answer)
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(Chat(bot))

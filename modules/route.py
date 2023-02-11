@@ -1,8 +1,17 @@
+import os
+import discord
+from discord import app_commands
+from discord.ext import commands
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import datetime
 from typing import Tuple
+
+from config import DISCORD_SERVER_KEY
+
+guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 def get_nearest_station(user: str) -> Tuple[str, str, str, int]:
     '''
@@ -55,4 +64,36 @@ def get_route(user: str, file_path: str="./upload.png", from_station="", to_stat
 
     save_route_screenshot(url, file_path)
     return url
+
+# ---
+
+class Route(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+
+    @app_commands.command(name="home", description="帰宅経路を検索します．")
+    @app_commands.guilds(guild)
+    async def send_home(self, ctx: discord.Interaction):
+        file_path = "./upload.png"
+        await ctx.response.send_message(
+            get_route(ctx.user.display_name, file_path),
+            file=discord.File(file_path)
+        )
+
+    @app_commands.command(name="route", description="出発地から目的地までの経路を検索します．")
+    @app_commands.guilds(guild)
+    @discord.app_commands.describe(
+        from_station="出発地を指定します．", 
+        to_station="目的地を指定します．", 
+        via_station="経由地を指定します．"
+    )
+    async def send_route(self, ctx: discord.Interaction, from_station: str, to_station: str, via_station: str=""):
+        file_path = "./upload.png"
+        await ctx.response.send_message(
+            get_route(ctx.user.display_name, file_path, from_station, to_station, via_station), 
+            file=discord.File(file_path)
+        )
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(Route(bot))
 
