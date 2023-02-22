@@ -132,6 +132,15 @@ class Speak(commands.Cog):
             await self.enqueue_message(message.content)
 
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.User, before: discord.VoiceChannel, after: discord.VoiceChannel):
+        if ((self.await_message.is_running()) and (member.bot == False) and (before.channel != after.channel)):
+            if (before.channel is None):
+                message = f"{member.name} が入室したのだ．"
+            elif (after.channel is None):
+                message = f"{member.name} が退室したのだ．"
+            await self.enqueue_message(message)
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Speak(bot))
