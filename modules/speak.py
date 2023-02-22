@@ -63,6 +63,9 @@ class Speak(commands.Cog):
     async def send_speak_exit(self, ctx: discord.Interaction):
         await ctx.response.defer(ephemeral=True)
         await self.voice_client.disconnect()
+        self.voice_channel = discord.VoiceChannel
+        self.watch_channel = discord.TextChannel
+        self.voice_client = discord.VoiceClient
         await ctx.followup.send("ずんだもんが退室しました．", ephemeral=True)
 
     def play(self):
@@ -77,7 +80,7 @@ class Speak(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if (message.channel.name == self.watch_channel.name):
+        if (type(message.channel) is discord.TextChannel and message.channel.name == self.watch_channel.name):
             now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
             file_path = f"./output_{now}.wav"
             synthesis(message.content, file_path)
