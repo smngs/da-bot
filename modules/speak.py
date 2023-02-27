@@ -11,7 +11,7 @@ from collections import deque
 
 import asyncio
 
-from config import DISCORD_SERVER_KEY
+from config import DISCORD_SERVER_KEY, SPEAK_CHAT_DEFAULT_CHANNEL_ID
 
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
@@ -92,8 +92,12 @@ class Speak(commands.Cog):
     @discord.app_commands.describe(
         channel="読み上げ対象のテキストチャンネルを指定します．"
     )
-    async def send_speak_join(self, ctx: discord.Interaction, channel: discord.TextChannel):
+    async def send_speak_join(self, ctx: discord.Interaction, channel: discord.TextChannel = None):
         await ctx.response.defer(ephemeral=True)
+
+        if channel == None:
+            channel = ctx.guild.get_channel(int(SPEAK_CHAT_DEFAULT_CHANNEL_ID))
+
         self.watch_channel = channel
         if ctx.user.voice == None:
             await ctx.followup.send(f"先に VC に入ってから，`/join` コマンドを実行してください．")
