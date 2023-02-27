@@ -80,7 +80,6 @@ class Speak(commands.Cog):
                 await asyncio.sleep(1)
 
             if not self.voice_client.is_playing():
-                print(self.queue)
                 await self.play_message()
                 break
             else:
