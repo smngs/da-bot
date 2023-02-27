@@ -56,7 +56,7 @@ class Speak(commands.Cog):
         この関数はずんだもんが VC 内にいるときに実行されることが保証される．
         """
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        file_path = f"./output_{now}.wav"
+        file_path = f"./tmp/output_{now}.wav"
         await synthesis(text, file_path)
         await self.queue.put(file_path)
 

@@ -56,7 +56,7 @@ def save_route_screenshot(target_url: str, file_path: str, range_id: str="srline
 
     driver.close()
 
-def get_route(user: str, file_path: str="./upload.png", from_station="", to_station="", via_station="") ->  str:
+def get_route(user: str, file_path: str="./tmp/upload.png", from_station="", to_station="", via_station="") ->  str:
     if (from_station == ""):
         url = get_route_url(*get_nearest_station(user))
     else:
@@ -74,7 +74,7 @@ class Route(commands.Cog):
     @app_commands.command(name="home", description="帰宅経路を検索します．")
     @app_commands.guilds(guild)
     async def send_home(self, ctx: discord.Interaction):
-        file_path = "./upload.png"
+        file_path = "./tmp/upload.png"
         await ctx.response.send_message(
             get_route(ctx.user.display_name, file_path),
             file=discord.File(file_path)
@@ -88,7 +88,7 @@ class Route(commands.Cog):
         via_station="経由地を指定します．"
     )
     async def send_route(self, ctx: discord.Interaction, from_station: str, to_station: str, via_station: str=""):
-        file_path = "./upload.png"
+        file_path = "./tmp/upload.png"
         await ctx.response.send_message(
             get_route(ctx.user.display_name, file_path, from_station, to_station, via_station), 
             file=discord.File(file_path)
