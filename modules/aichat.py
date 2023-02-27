@@ -3,31 +3,32 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-import openai
+import json
+import ujson
+import aiohttp
 
 from config import DISCORD_SERVER_KEY, OPENAI_API_KEY
 
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
-class AIChat:
-    def __init__(self):
-        openai.api_key = OPENAI_API_KEY
+async def get_chat(prompt: str):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + str(OPENAI_API_KEY)
+    }
 
-    def response(self, prompt: str):
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=1024,
-            temperature=0.5,
-        )
+    data_json = {
+        "model": "text-davinci-003",
+        "prompt": prompt,
+        "max_tokens": 1024,
+        "temperature": 0.5,
+    }
 
-        answer = response['choices'][0]['text']
-        return answer
-
-def trigger_chat(prompt: str):
-    chatai = AIChat()
-    response = chatai.response(prompt)
-    return response
+    async with aiohttp.ClientSession("https://api.openai.com", json_serialize=ujson.dumps) as session:
+        async with session.post("/v1/completions", headers=headers, json=data_json) as r:
+            if r.status == 200:
+                json_body = await r.json()
+                return json_body["choices"][0]["text"]
 
 def generate_embed(prompt: str, user: discord.User) -> discord.Embed:
     embed = discord.Embed(
@@ -53,7 +54,7 @@ class Chat(commands.Cog):
         await ctx.response.defer()
         await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
         async with ctx.channel.typing():
-            answer = trigger_chat(prompt)
+            answer = await get_chat(prompt)
         await ctx.followup.send(answer)
 
 async def setup(bot: commands.Bot) -> None:
