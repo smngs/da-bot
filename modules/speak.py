@@ -5,37 +5,37 @@ from discord.ext import tasks, commands
 
 import requests
 import json
+import ujson
 import time
 from datetime import datetime
 from collections import deque
 
+import aiohttp
 import asyncio
 
 from config import DISCORD_SERVER_KEY, SPEAK_CHAT_DEFAULT_CHANNEL_ID
 
 guild = discord.Object(id=DISCORD_SERVER_KEY)
 
-def synthesis(text, filename, speaker=1, max_retry=20):
-    query_payload = {"text": text, "speaker": speaker}
-    for query_i in range(max_retry):
-        r = requests.post("http://voicevox:50021/audio_query", 
-                          params=query_payload, timeout=(10.0, 300.0))
-        if r.status_code == 200:
-            query_data = r.json()
-            break
-        else:
-            raise ConnectionError("リトライ回数が上限に到達しました。 audio_query : ", filename, "/", text[:30], r.text)
+async def synthesis(text, filename, speaker=1, max_retry=20):
 
-    synth_payload = {"speaker": speaker}    
-    for synth_i in range(max_retry):
-        r = requests.post("http://voicevox:50021/synthesis", params=synth_payload, 
-                          data=json.dumps(query_data), timeout=(10.0, 300.0))
-        if r.status_code == 200:
-            with open(filename, "wb") as fp:
-                fp.write(r.content)
-            break
-        else:
-            raise ConnectionError("リトライ回数が上限に到達しました。 synthesis : ", filename, "/", text[:30], r,text)
+    query_payload = {"text": text, "speaker": speaker}
+    synth_payload = {"speaker": speaker}
+    async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
+        async with session.post("/audio_query", params=query_payload) as r:
+            if r.status == 200:
+                query_data = await r.json()
+            else:
+                raise ConnectionError("リトライ回数が上限に到達しました。 audio_query : ", filename, "/", text[:30], r.text)
+
+        async with session.post("/synthesis", params=synth_payload, json=query_data) as r:
+            if r.status == 200:
+                with open(filename, 'wb') as fd:
+                    chunk_size = 4
+                    async for chunk in r.content.iter_chunked(chunk_size):
+                        fd.write(chunk)
+            else:
+                raise ConnectionError("リトライ回数が上限に到達しました。 audio_query : ", filename, "/", text[:30], r.text)
 
 class Speak(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -57,7 +57,7 @@ class Speak(commands.Cog):
         """
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         file_path = f"./output_{now}.wav"
-        synthesis(text, file_path)
+        await synthesis(text, file_path)
         await self.queue.put(file_path)
 
     async def play_message(self):
@@ -76,16 +76,15 @@ class Speak(commands.Cog):
         本関数は asyncio によって定期的に実行される．
         """
         while True:
-            print(self.queue)
             while self.queue.empty():
                 await asyncio.sleep(1)
 
             if not self.voice_client.is_playing():
+                print(self.queue)
                 await self.play_message()
                 break
             else:
                 await asyncio.sleep(1)
-
 
     @app_commands.command(name="speak-join", description="テキストチャンネルに投稿された音声を読み上げます．先に VC に入ってからコマンドを実行してください．")
     @app_commands.guilds(guild)

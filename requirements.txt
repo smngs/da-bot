@@ -5,3 +5,6 @@ pytz
 pynacl
 mecab-python3
 unidic-lite
+aiohttp
+aiodns
+ujson
