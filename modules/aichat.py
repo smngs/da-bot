@@ -60,12 +60,12 @@ class Chat(commands.Cog):
             )
         await ctx.followup.send(answer)
 
-    @app_commands.command(name="tundere", description="ツンデレ美少女とおしゃべりします．")
+    @app_commands.command(name="tsundere", description="ツンデレ美少女とおしゃべりします．")
     @app_commands.guilds(guild)
     @discord.app_commands.describe(
         prompt="ツンデレ美少女に話しかける内容です．"
     )
-    async def send_tundere(self, ctx: discord.Interaction, prompt: str):
+    async def send_tsundere(self, ctx: discord.Interaction, prompt: str):
         await ctx.response.defer()
         await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
         async with ctx.channel.typing():
