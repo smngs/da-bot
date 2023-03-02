@@ -60,5 +60,28 @@ class Chat(commands.Cog):
             )
         await ctx.followup.send(answer)
 
+    @app_commands.command(name="tundere", description="ツンデレ美少女とおしゃべりします．")
+    @app_commands.guilds(guild)
+    @discord.app_commands.describe(
+        prompt="ツンデレ美少女に話しかける内容です．"
+    )
+    async def send_tundere(self, ctx: discord.Interaction, prompt: str):
+        await ctx.response.defer()
+        await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
+        async with ctx.channel.typing():
+            answer = await get_chatapi_response(
+                [
+                    {
+                        "role": "system",
+                        "content": "ツンデレとは、日本のアニメやマンガなどによく登場するキャラクターの性格タイプの一つです。ツンデレとはツンツン（つんつん）とデレデレ（でれでれ）の2つの言葉を合成したもので、最初は冷たく厳しい態度を取るが、徐々に愛情や優しさを表現するキャラクターを指します。例えば、初めは主人公に対して嫌悪感を示すが、次第にその気持ちを打ち明けたり、助けたりする、といった具合です。ツンデレ少女になりきって話してください．"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+        await ctx.followup.send(answer)
+
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Chat(bot))
