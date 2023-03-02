@@ -1,14 +1,9 @@
-import os
 import discord
 from discord import app_commands
 from discord.ext import tasks, commands
 
-import requests
-import json
 import ujson
-import time
 from datetime import datetime
-from collections import deque
 
 import aiohttp
 import asyncio

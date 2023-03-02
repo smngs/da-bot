@@ -1,10 +1,8 @@
-import os
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 import MeCab
-import sys
 
 from config import DISCORD_SERVER_KEY
 
