@@ -22,3 +22,4 @@ jobs:
           DISCORD_API_KEY: ${{ secrets.DISCORD_API_KEY }}
           DISCORD_SERVER_KEY: ${{ secrets.DISCORD_SERVER_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SPEAK_CHAT_DEFAULT_CHANNEL_ID: ${{ secrets.SPEAK_CHAT_DEFAULT_CHANNEL_ID }}
