@@ -2,15 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import tasks, commands
 
+from config import DISCORD_SERVER_ID
+
 import ujson
 from datetime import datetime
 
 import aiohttp
 import asyncio
-
-from config import DISCORD_SERVER_KEY, SPEAK_CHAT_DEFAULT_CHANNEL_ID
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 async def synthesis(text, filename, speaker=1, max_retry=20):
 
@@ -160,4 +158,8 @@ class Speak(commands.Cog):
             await self.enqueue_message(message, guild_id)
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Speak(bot))
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(Speak(bot), guild=guild)
+    else:
+        await bot.add_cog(Speak(bot))

@@ -2,16 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import DISCORD_SERVER_KEY
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
+from config import DISCORD_SERVER_ID
 
 class Help(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @app_commands.command(name="help", description="Bot のヘルプを表示します．")
-    @app_commands.guilds(guild)
     async def send_help(self, ctx: discord.Interaction):
         embed = discord.Embed(
             title="@da-bot Help",
@@ -34,4 +31,9 @@ class Help(commands.Cog):
         await ctx.response.send_message(embed=embed, ephemeral=True)
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Help(bot))
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(Help(bot), guild=guild)
+    else:
+        await bot.add_cog(Help(bot))
+ 

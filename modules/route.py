@@ -2,15 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from config import DISCORD_SERVER_ID
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import datetime
 from typing import Tuple
-
-from config import DISCORD_SERVER_KEY
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 def get_nearest_station(user: str) -> Tuple[str, str, str, int]:
     '''
@@ -71,7 +69,6 @@ class Route(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="home", description="帰宅経路を検索します．")
-    @app_commands.guilds(guild)
     async def send_home(self, ctx: discord.Interaction):
         file_path = "./tmp/upload.png"
         await ctx.response.send_message(
@@ -80,7 +77,6 @@ class Route(commands.Cog):
         )
 
     @app_commands.command(name="route", description="出発地から目的地までの経路を検索します．")
-    @app_commands.guilds(guild)
     @discord.app_commands.describe(
         from_station="出発地を指定します．", 
         to_station="目的地を指定します．", 
@@ -94,5 +90,9 @@ class Route(commands.Cog):
         )
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Route(bot))
-
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(Route(bot), guild=guild)
+    else:
+        await bot.add_cog(Route(bot))
+ 

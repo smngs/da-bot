@@ -2,11 +2,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from config import DISCORD_SERVER_ID
+
 import MeCab
-
-from config import DISCORD_SERVER_KEY
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
 
 def generate_embed(prompt: str, user: discord.User) -> discord.Embed:
     embed = discord.Embed(
@@ -101,11 +99,14 @@ class EseChinese(commands.Cog):
     @app_commands.describe(
         prompt="偽中国語に翻訳する内容です．"
     )
-    @app_commands.guilds(guild)
     async def send_ese_chinese(self, ctx: discord.Interaction, prompt: str):
         await ctx.response.defer()
         await ctx.followup.send(embed=generate_embed(prompt, ctx.user))
         await ctx.followup.send(to_esechinese(prompt))
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(EseChinese(bot))
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(EseChinese(bot), guild=guild)
+    else:
+        await bot.add_cog(EseChinese(bot))

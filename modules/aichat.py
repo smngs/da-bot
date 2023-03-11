@@ -7,9 +7,7 @@ import json
 import ujson
 import aiohttp
 
-from config import DISCORD_SERVER_KEY, OPENAI_API_KEY
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
+from config import DISCORD_SERVER_ID, OPENAI_API_KEY
 
 async def get_chatapi_response(messages):
     headers = {
@@ -44,7 +42,6 @@ class Chat(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="chat", description="ChatGPT とおしゃべりします．")
-    @app_commands.guilds(guild)
     @discord.app_commands.describe(
         prompt="ChatGPT に話しかける内容です．"
     )
@@ -61,7 +58,6 @@ class Chat(commands.Cog):
         await ctx.followup.send(answer)
 
     @app_commands.command(name="tsundere", description="ツンデレ美少女とおしゃべりします．")
-    @app_commands.guilds(guild)
     @discord.app_commands.describe(
         prompt="ツンデレ美少女に話しかける内容です．"
     )
@@ -84,4 +80,8 @@ class Chat(commands.Cog):
         await ctx.followup.send(answer)
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Chat(bot))
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(Chat(bot), guild=guild)
+    else:
+        await bot.add_cog(Chat(bot))

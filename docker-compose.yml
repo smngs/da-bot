@@ -9,9 +9,8 @@ services:
       - .:/root/src
     environment:
       DISCORD_API_KEY: ${DISCORD_API_KEY}
-      DISCORD_SERVER_KEY: ${DISCORD_SERVER_KEY}
+      DISCORD_SERVER_ID: ${DISCORD_SERVER_ID}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      SPEAK_CHAT_DEFAULT_CHANNEL_ID: ${SPEAK_CHAT_DEFAULT_CHANNEL_ID}
     command:
       python app.py
     tty: yes
