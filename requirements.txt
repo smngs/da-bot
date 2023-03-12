@@ -8,3 +8,4 @@ unidic-lite
 aiohttp
 aiodns
 ujson
+motor
