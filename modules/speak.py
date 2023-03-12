@@ -11,7 +11,6 @@ import aiohttp
 import asyncio
 
 async def synthesis(text, filename, speaker=1, max_retry=20):
-
     query_payload = {"text": text, "speaker": speaker}
     synth_payload = {"speaker": speaker}
     async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
@@ -29,6 +28,41 @@ async def synthesis(text, filename, speaker=1, max_retry=20):
                         fd.write(chunk)
             else:
                 raise ConnectionError("リトライ回数が上限に到達しました。 audio_query : ", filename, "/", text[:30], r.text)
+
+async def get_voicevox_dict():
+    async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
+        async with session.get("/user_dict") as r:
+            if r.status == 200:
+                response_json = await r.json()
+                return response_json
+            else:
+                return None
+
+async def post_voicevox_dict(surface: str, pronunciation: str, accent_type: int):
+    query_payload = {"surface": surface, "pronunciation": pronunciation, "accent_type": accent_type}
+    async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
+        async with session.post("/user_dict_word", params=query_payload) as r:
+            if r.status == 200:
+                return r.text
+            else:
+                return None
+
+async def put_voicevox_dict(uuid: str, surface: str, pronunciation: str, accent_type: int):
+    query_payload = {"surface": surface, "pronunciation": pronunciation, "accent_type": accent_type}
+    async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
+        async with session.put(f"/user_dict_word/{uuid}", params=query_payload) as r:
+            if r.status == 204:
+                return r.text
+            else:
+                return None
+
+async def delete_voicevox_dict(uuid: str):
+    async with aiohttp.ClientSession("http://voicevox:50021", json_serialize=ujson.dumps) as session:
+        async with session.delete(f"/user_dict_word/{uuid}") as r:
+            if r.status == 204:
+                return r.text
+            else:
+                return None
 
 class Speak(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -95,9 +129,7 @@ class Speak(commands.Cog):
         await ctx.response.defer(ephemeral=True)
 
         if channel == None:
-            # channel = ctx.guild.get_channel(int(SPEAK_CHAT_DEFAULT_CHANNEL_ID))
             channel = ctx.guild.get_channel(ctx.channel_id)
-
 
         self.watch_channels[ctx.guild_id] = channel
 
@@ -136,6 +168,54 @@ class Speak(commands.Cog):
 
         await ctx.followup.send("ずんだもんが退室しました．", ephemeral=True)
 
+    @app_commands.command(name="speak-dict", description="読み上げ Bot の発音辞書を追加します．この辞書はサーバ全体で共有されます．")
+    @discord.app_commands.describe(
+        method="実行する内容を選択します．",
+        surface="言葉の表層系を表します．読み上げの対象となる単語を，漢字や英語で入力してください．",
+        pronunciation="言葉の発音をカタカナで入力します．",
+        accent_type="アクセント位置（音が下がる場所）を，先頭文字を 1 とする整数値で入力します．例えば「テスト（→↓↓）」の場合は 1 を入力します．"
+    )
+    @discord.app_commands.choices(method=[
+        app_commands.Choice(name="確認 (GET)", value="get"),
+        app_commands.Choice(name="追加 (POST)", value="post"),
+        app_commands.Choice(name="変更 (PUT)", value="put"),
+        app_commands.Choice(name="削除 (DELETE)", value="delete")
+    ])
+    async def send_speak_dict(self, ctx: discord.Interaction, method: str, surface: str="", pronunciation: str="", accent_type: int=0, uuid: str=""):
+        await ctx.response.defer(ephemeral=True)
+
+        if (method == "get"):
+            response = await get_voicevox_dict()
+            if response is None:
+                await ctx.followup.send("閲覧に失敗しました．")
+            else:
+                response_text = "辞書内容\n\n"
+
+                for key, value in response.items():
+                    response_text += f"`UUID`: `{key}`\n`surface`: `{value['surface']}`, `pronunciation`: `{value['pronunciation']}`, `accent_type`: `{value['accent_type']}`\n\n"
+
+                await ctx.followup.send(response_text, ephemeral=True)
+
+        elif (method == "post"):
+            new_uuid = await post_voicevox_dict(surface, pronunciation, accent_type)
+            if new_uuid is None:
+                await ctx.followup.send("登録に失敗しました．")
+            else:
+                await ctx.followup.send("登録に成功しました．")
+
+        elif (method == "put"):
+            response_json = await put_voicevox_dict(uuid, surface, pronunciation, accent_type)
+            if response_json is None:
+                await ctx.followup.send("変更に失敗しました．")
+            else:
+                await ctx.followup.send("変更に成功しました．")
+
+        elif (method == "delete"):
+            response_json = await delete_voicevox_dict(uuid)
+            if response_json is None:
+                await ctx.followup.send("削除に失敗しました．")
+            else:
+                await ctx.followup.send("削除に成功しました．")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

@@ -16,6 +16,7 @@ services:
     command:
       python app.py
     tty: yes
+
   voicevox:
     image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
     ports:
