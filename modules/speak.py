@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks, commands
 
-from config import DISCORD_SERVER_ID
+from config import DISCORD_SERVER_ID, db
 
 import ujson
 from datetime import datetime
@@ -64,6 +64,45 @@ async def delete_voicevox_dict(uuid: str):
             else:
                 return None
 
+async def get_voicevox_speaker(guild_id: int, user_id: int) -> int:
+    speaker_collection = db["voicevox_speaker"]
+    speaker = await speaker_collection.find_one({
+        "guild_id": guild_id,
+        "user_id": user_id
+    })
+
+    if speaker is None:
+        # 登録がない場合はずんだもん（あまあま）を利用
+        return 1 
+
+    return speaker["speaker_id"]
+
+async def regist_voicevox_speaker(guild_id: int, user_id: int, speaker_id: int) -> None:
+    speaker_collection = db["voicevox_speaker"]
+
+    # 一旦取得して，なければ新しくつっこむ
+    speaker = await speaker_collection.find_one({
+        "guild_id": guild_id,
+        "user_id": user_id
+    })
+
+    set_speaker = {
+        "guild_id": guild_id,
+        "user_id": user_id,
+        "speaker_id": speaker_id
+    }
+
+    if speaker is None:
+        await speaker_collection.insert_one(set_speaker)
+    else:
+        await speaker_collection.update_one(
+            {
+                "_id": speaker["_id"]
+            }, {
+                "$set": set_speaker
+            }
+        )
+
 class Speak(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -84,14 +123,14 @@ class Speak(commands.Cog):
         self.await_message.cancel()
 
 
-    async def enqueue_message(self, text: str, guild_id: int) -> None:
+    async def enqueue_message(self, text: str, guild_id: int, speaker_id: int=1) -> None:
         """
         VoiceVox によって音声を生成し，そのファイルパスを enqueue する．
         この関数はずんだもんが VC 内にいるときに実行されることが保証される．
         """
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         file_path = f"./tmp/output_{now}.wav"
-        await synthesis(text, file_path)
+        await synthesis(text, file_path, speaker_id)
         await self.queues[guild_id].put(file_path)
 
     async def play_message(self, guild_id: int):
@@ -217,13 +256,37 @@ class Speak(commands.Cog):
             else:
                 await ctx.followup.send("削除に成功しました．")
 
+
+    @app_commands.command(name="speak-set", description="読み上げ Bot における話者を選択します．")
+    @discord.app_commands.describe(
+        speaker = "設定する話者を選択します．"
+    )
+    @discord.app_commands.choices(speaker=[
+        app_commands.Choice(name="ずんだもん（あまあま）", value=1),
+        app_commands.Choice(name="ずんだもん（ノーマル）", value=3),
+        app_commands.Choice(name="ずんだもん（ツンツン）", value=7),
+        app_commands.Choice(name="ずんだもん（セクシー）", value=5),
+        app_commands.Choice(name="ずんだもん（ささやき）", value=22),
+        app_commands.Choice(name="ずんだもん（ヒソヒソ）", value=38),
+        app_commands.Choice(name="春日部つむぎ", value=8),
+        app_commands.Choice(name="四国めたん", value=2),
+        app_commands.Choice(name="白上虎太郎", value=12),
+        app_commands.Choice(name="冥鳴ひまり", value=14),
+    ])
+    async def send_speak_dict(self, ctx: discord.Interaction, speaker: int):
+        await ctx.response.defer(ephemeral=True)
+        await regist_voicevox_speaker(ctx.guild_id, ctx.user.id, speaker)
+        await ctx.followup.send(f"登録しました．")
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if type(message.channel) is discord.TextChannel and type(message.guild) is discord.Guild:
             guild_id = message.guild.id
+            user_id = message.author.id
 
             if type(self.watch_channels[guild_id]) is discord.TextChannel and message.channel.name == self.watch_channels[guild_id].name:
-                await self.enqueue_message(message.content, guild_id)
+                speaker_id = await get_voicevox_speaker(guild_id, user_id)
+                await self.enqueue_message(message.content, guild_id, speaker_id)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.User, before: discord.VoiceState, after: discord.VoiceState):
