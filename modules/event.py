@@ -2,9 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import DISCORD_SERVER_KEY
-
-guild = discord.Object(id=DISCORD_SERVER_KEY)
+from config.discord import DISCORD_SERVER_ID
 
 from datetime import datetime
 
@@ -28,7 +26,6 @@ class Event(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="event", description="新しいイベントをサーバに登録します．")
-    @app_commands.guilds(guild)
     @discord.app_commands.describe(
         name="イベントの名前を指定します．", 
         description="イベントの目的を指定します．", 
@@ -41,4 +38,8 @@ class Event(commands.Cog):
         await ctx.response.send_message(new_event.url)
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Event(bot))
+    if DISCORD_SERVER_ID:
+        guild = discord.Object(id=int(DISCORD_SERVER_ID))
+        await bot.add_cog(Event(bot), guild=guild)
+    else:
+        await bot.add_cog(Event(bot))

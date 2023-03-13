@@ -9,14 +9,28 @@ services:
       - .:/root/src
     environment:
       DISCORD_API_KEY: ${DISCORD_API_KEY}
-      DISCORD_SERVER_KEY: ${DISCORD_SERVER_KEY}
+      DISCORD_SERVER_ID: ${DISCORD_SERVER_ID}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      SPEAK_CHAT_DEFAULT_CHANNEL_ID: ${SPEAK_CHAT_DEFAULT_CHANNEL_ID}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
     command:
       python app.py
     tty: yes
+
   voicevox:
     image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
     ports:
       - 50021:50021
     tty: yes
+
+  mongo:
+    image: mongo:6.0-jammy
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - 27017
+    volumes:
+      - ./mongodb:/data/db
