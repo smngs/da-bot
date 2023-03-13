@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks, commands
 
-from config import DISCORD_SERVER_ID
+from config.discord import DISCORD_SERVER_ID
 
 import ujson
 from datetime import datetime

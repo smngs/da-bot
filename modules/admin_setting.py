@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import DISCORD_SERVER_ID
+from config.discord import DISCORD_SERVER_ID
 
 class AdminSetting(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:

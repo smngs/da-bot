@@ -2,7 +2,7 @@ import os
 import discord
 from discord.ext import commands
 
-from config import DISCORD_API_KEY, DISCORD_SERVER_ID
+from config.discord import DISCORD_API_KEY, DISCORD_SERVER_ID
 
 bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 COGS = [
@@ -19,8 +19,6 @@ COGS = [
 @bot.event
 async def on_ready():
     print('Logged on as', bot.user)
-
-    print('------')
     for cogs in COGS:
         await bot.load_extension(cogs)
         print(f"Loaded: {cogs}")

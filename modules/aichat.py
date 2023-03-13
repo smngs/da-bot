@@ -7,7 +7,8 @@ import json
 import ujson
 import aiohttp
 
-from config import DISCORD_SERVER_ID, OPENAI_API_KEY
+from config.discord import DISCORD_SERVER_ID
+from config.openai import OPENAI_API_KEY
 
 async def get_chatapi_response(messages):
     headers = {
