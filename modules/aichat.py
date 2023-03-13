@@ -10,6 +10,8 @@ import aiohttp
 from config.discord import DISCORD_SERVER_ID
 from config.openai import OPENAI_API_KEY
 
+EMOJI_WILL_IGNORED = "❌"
+
 async def get_chatapi_response(messages):
     headers = {
         "Content-Type": "application/json",
@@ -110,7 +112,7 @@ class Chat(commands.Cog):
                 for message in messages:
                     will_ignored = False
                     for reaction in message.reactions:
-                        if (reaction.emoji == "❌") and (reaction.count >= 2):
+                        if (reaction.emoji == EMOJI_WILL_IGNORED) and (reaction.count >= 2):
                             will_ignored = True
                             break
 
@@ -128,9 +130,8 @@ class Chat(commands.Cog):
 
                 response_text = await get_chatapi_response(chat_messages)
                 response_message = await message.channel.send(response_text)
-                await message.add_reaction("❌")
-                await response_message.add_reaction("❌")
-
+                await message.add_reaction(EMOJI_WILL_IGNORED)
+                await response_message.add_reaction(EMOJI_WILL_IGNORED)
 
 async def setup(bot: commands.Bot) -> None:
     if DISCORD_SERVER_ID:
