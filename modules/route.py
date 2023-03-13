@@ -2,7 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import DISCORD_SERVER_ID, db
+from config.discord import DISCORD_SERVER_ID
+from db.client import db
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
