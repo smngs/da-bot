@@ -10,6 +10,8 @@ import aiohttp
 from config.discord import DISCORD_SERVER_ID
 from config.openai import OPENAI_API_KEY
 
+EMOJI_WILL_IGNORED = "❌"
+
 async def get_chatapi_response(messages):
     headers = {
         "Content-Type": "application/json",
@@ -79,6 +81,55 @@ class Chat(commands.Cog):
                 ]
             )
         await ctx.followup.send(answer)
+
+    @app_commands.command(name="chat-thread", description="スレッドで ChatGPT とおしゃべりします．")
+    @discord.app_commands.describe(
+        thread_name="スレッドの名前を入力します．"
+    )
+    async def send_chat_thread(self, ctx: discord.Interaction, thread_name: str):
+        await ctx.response.defer()
+        channel = ctx.channel
+        thread = await channel.create_thread(
+            name=thread_name, 
+            reason="da-bot による自動生成スレッドです．",
+            type=discord.ChannelType.public_thread
+        )
+        link = thread.mention
+        await ctx.followup.send(link)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        '''
+        投稿されたチャネルがスレッドで，かつそのスレッドが da-bot により開設されたものであれば，適当な context を生成して message を生成する．
+        ただし，投稿の  reaction に :x: が含まれている場合はその投稿を無視する．
+        '''
+        if (message.author.id != self.bot.user.id) and (message.channel.type == discord.ChannelType.public_thread) and (message.channel.owner_id == self.bot.user.id):
+            async with message.channel.typing():
+                chat_messages = []
+                messages = [m async for m in message.channel.history()]
+                messages.reverse()
+
+                for message in messages:
+                    will_ignored = False
+                    for reaction in message.reactions:
+                        if (reaction.emoji == EMOJI_WILL_IGNORED) and (reaction.count >= 2):
+                            will_ignored = True
+                            break
+
+                    if (will_ignored):
+                        continue
+                    elif message.author.id == self.bot.user.id:
+                        chat_messages.append({"role": "assistant", "content": message.content})
+                    else:
+                        chat_messages.append({"role": "user", "content": message.content})
+
+                if len(chat_messages) == 0:
+                    return
+
+                response_text = await get_chatapi_response(chat_messages)
+                response_message = await message.channel.send(response_text)
+                await message.add_reaction(EMOJI_WILL_IGNORED)
+                await response_message.add_reaction(EMOJI_WILL_IGNORED)
 
 async def setup(bot: commands.Bot) -> None:
     if DISCORD_SERVER_ID:
