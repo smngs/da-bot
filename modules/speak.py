@@ -274,7 +274,7 @@ class Speak(commands.Cog):
         app_commands.Choice(name="白上虎太郎", value=12),
         app_commands.Choice(name="冥鳴ひまり", value=14),
     ])
-    async def send_speak_dict(self, ctx: discord.Interaction, speaker: int):
+    async def send_speak_set(self, ctx: discord.Interaction, speaker: int):
         await ctx.response.defer(ephemeral=True)
         await regist_voicevox_speaker(ctx.guild_id, ctx.user.id, speaker)
         await ctx.followup.send(f"登録しました．")
