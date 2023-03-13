@@ -126,8 +126,6 @@ class Chat(commands.Cog):
                 if len(chat_messages) == 0:
                     return
 
-                print(chat_messages)
-
                 response_text = await get_chatapi_response(chat_messages)
                 response_message = await message.channel.send(response_text)
                 await message.add_reaction(EMOJI_WILL_IGNORED)
