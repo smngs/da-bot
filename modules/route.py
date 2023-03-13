@@ -54,15 +54,16 @@ def save_route_screenshot(target_url: str, file_path: str, range_id: str="srline
 
     driver.close()
 
-async def get_route(user_id: int, file_path: str="./tmp/upload.png", from_station="", to_station="", via_station="", search_method=0) ->  Union[str, None]:
-    if (from_station == ""):
-        route = await get_nearest_station(user_id)
-        if route is None:
-            return None
-        url = get_route_url(*route)
-    else:
-        url = get_route_url(from_station, to_station, via_station, search_method)
+async def get_home_route(user_id: int, file_path: str="./tmp/upload.png") -> Union[str, None]:
+    route = await get_nearest_station(user_id)
+    if route is None:
+        return None
+    url = get_route_url(*route)
+    save_route_screenshot(url, file_path)
+    return url
 
+async def get_route(file_path: str="./tmp/upload.png", from_station="", to_station="", via_station="", search_method=0) ->  Union[str, None]:
+    url = get_route_url(from_station, to_station, via_station, search_method)
     save_route_screenshot(url, file_path)
     return url
 
@@ -103,14 +104,11 @@ class Route(commands.Cog):
     async def send_home(self, ctx: discord.Interaction):
         await ctx.response.defer()
         file_path = "./tmp/upload.png"
-        route_url = await get_route(ctx.user.id, file_path)
+        route_url = await get_home_route(ctx.user.id, file_path)
         if route_url is None:
             await ctx.followup.send("自宅の最寄り駅が登録されていません．`/route-register` 機能を利用して登録してください．")
         else:
-            await ctx.followup.send(
-                route_url,
-                file=discord.File(file_path)
-            )
+            await ctx.followup.send(route_url, file=discord.File(file_path))
 
     @app_commands.command(name="route", description="出発地から目的地までの経路を検索します．")
     @discord.app_commands.describe(
@@ -126,10 +124,8 @@ class Route(commands.Cog):
     ])
     async def send_route(self, ctx: discord.Interaction, from_station: str, to_station: str, via_station: str="", search_method: int=0):
         file_path = "./tmp/upload.png"
-        await ctx.response.send_message(
-            get_route(ctx.user.display_name, file_path, from_station, to_station, via_station), 
-            file=discord.File(file_path)
-        )
+        route_url = await get_route(file_path, from_station, to_station, via_station, search_method)
+        await ctx.response.send_message(route_url, file=discord.File(file_path))
 
     @app_commands.command(name="route-register", description="自宅と職場の最寄り駅を登録します．")
     @discord.app_commands.describe(
