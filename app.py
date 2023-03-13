@@ -2,7 +2,7 @@ import os
 import discord
 from discord.ext import commands
 
-from config import DISCORD_API_KEY, DISCORD_SERVER_ID
+from config.discord import DISCORD_API_KEY, DISCORD_SERVER_ID
 
 bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 COGS = [
