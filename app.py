@@ -19,8 +19,6 @@ COGS = [
 @bot.event
 async def on_ready():
     print('Logged on as', bot.user)
-
-    print('------')
     for cogs in COGS:
         await bot.load_extension(cogs)
         print(f"Loaded: {cogs}")
