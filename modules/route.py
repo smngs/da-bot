@@ -33,7 +33,7 @@ def get_route_url(from_station: str, to_station: str, via_station: str, search_m
     dt = datetime.datetime.now() + datetime.timedelta(minutes=deltatime)
     year, month, day, hour, minute = dt.year, dt.month, dt.day, dt.hour, dt.minute
 
-    route_url = f"https://transit.yahoo.co.jp/search/print?from={from_station}&flatlon=&to={to_station}&via={via_station}&s={search_method}&y={year}&m={str(month).zfill(2)}&d={str(day).zfill(2)}&hh={hour}&m1={minute//10}&m2={minute%10}"
+    route_url = f"https://transit.yahoo.co.jp/search/print?from={from_station}&flatlon=&to={to_station}&via={via_station}&s={search_method}&y={year}&m={str(month).zfill(2)}&d={str(day).zfill(2)}&hh={str(hour).zfill(2)}&m1={minute//10}&m2={minute%10}"
     return route_url
 
 def save_route_screenshot(target_url: str, file_path: str, range_id: str="srline") -> None:
