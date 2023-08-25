@@ -143,19 +143,11 @@ def write_txtfile(text: str):
     fp.seek(0)
     return fp
 
-
-
 class Translate(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="translate", description="与えられた文章を翻訳します．")
-    @discord.app_commands.describe(
-        text="翻訳する文章を入力します．",
-        source_lang="原文の言語を指定します．",
-        target_lang="翻訳文の言語を指定します．"
-    )
-    async def send_translate(self, ctx: discord.Interaction, text: str, source_lang: str="JA", target_lang: str="EN"):
+    async def translate(self, ctx: discord.Interaction, text: str, source_lang: str="JA", target_lang: str="EN"):
         await ctx.response.defer()
         #  await ctx.followup.send(embed=generate_embed(text, ctx.user))
         async with ctx.channel.typing():
@@ -186,13 +178,30 @@ class Translate(commands.Cog):
             )
             await ctx.followup.send(embed=embed)
 
-    @app_commands.command(name="translate_document", description="与えられたドキュメントを翻訳します．PDF ファイルや Word ファイルなどに対応しています．")
+    @app_commands.command(name="translate", description="与えられた文章を翻訳します．")
     @discord.app_commands.describe(
-        document="翻訳するドキュメントを指定します．",
+        text="翻訳する文章を入力します．",
         source_lang="原文の言語を指定します．",
         target_lang="翻訳文の言語を指定します．"
     )
-    async def send_translate_document(self, ctx: discord.Interaction, document: discord.Attachment, source_lang: str="JA", target_lang: str="EN"):
+    async def send_translate(self, ctx: discord.Interaction, text: str, source_lang: str="JA", target_lang: str="EN"):
+        await self.translate(ctx, text, source_lang, target_lang)
+
+    @app_commands.command(name="translate_ja", description="与えられた文章を英語から日本語に翻訳します．")
+    @discord.app_commands.describe(
+        text="翻訳する文章を入力します．",
+    )
+    async def send_translate_ja(self, ctx: discord.Interaction, text: str):
+        await self.translate(ctx, text, "EN", "JA")
+
+    @app_commands.command(name="translate_en", description="与えられた文章を日本語から英語に翻訳します．")
+    @discord.app_commands.describe(
+        text="翻訳する文章を入力します．",
+    )
+    async def send_translate_en(self, ctx: discord.Interaction, text: str):
+        await self.translate(ctx, text, "JA", "EN")
+
+    async def translate_doc(self, ctx: discord.Interaction, document: discord.Attachment, source_lang: str="JA", target_lang: str="EN"):
         await ctx.response.defer()
 
         document_byte = io.BytesIO()
@@ -250,6 +259,30 @@ class Translate(commands.Cog):
         embed.add_field(name="翻訳に成功しました．", value=f"- ID: `{translate.document_id}`\n- KEY: `{translate.document_key}`")
         await ctx.followup.edit_message(message_id=message.id, embed=embed)
         await ctx.followup.send(file=file)
+
+    @app_commands.command(name="translate_doc", description="与えられたドキュメントを翻訳します．PDF ファイルや Word ファイルなどに対応しています．")
+    @discord.app_commands.describe(
+        document="翻訳するドキュメントを指定します．",
+        source_lang="原文の言語を指定します．",
+        target_lang="翻訳文の言語を指定します．"
+    )
+    async def send_translate_doc(self, ctx: discord.Interaction, document: discord.Attachment, source_lang: str="JA", target_lang: str="EN"):
+        await self.translate_doc(ctx, document, source_lang, target_lang)
+
+
+    @app_commands.command(name="translate_doc_en", description="与えられたドキュメントを日本語から英語に翻訳します．PDF ファイルや Word ファイルなどに対応しています．")
+    @discord.app_commands.describe(
+        document="翻訳するドキュメントを指定します．",
+    )
+    async def send_translate_doc_en(self, ctx: discord.Interaction, document: discord.Attachment):
+        await self.translate_doc(ctx, document, "JA", "EN")
+
+    @app_commands.command(name="translate_doc_ja", description="与えられたドキュメントを英語から日本語に翻訳します．PDF ファイルや Word ファイルなどに対応しています．")
+    @discord.app_commands.describe(
+        document="翻訳するドキュメントを指定します．",
+    )
+    async def send_translate_doc_ja(self, ctx: discord.Interaction, document: discord.Attachment):
+        await self.translate_doc(ctx, document, "EN", "JA")
 
 async def setup(bot: commands.Bot) -> None:
     if DISCORD_SERVER_ID:
