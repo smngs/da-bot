@@ -22,5 +22,6 @@ jobs:
           DISCORD_API_KEY: ${{ secrets.DISCORD_API_KEY }}
           DISCORD_SERVER_ID: ${{ secrets.DISCORD_SERVER_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}

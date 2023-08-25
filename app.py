@@ -13,6 +13,7 @@ COGS = [
     "modules.event",
     "modules.speak",
     "modules.aichat",
+    "modules.translate",
     "modules.ese_chinese",
     "modules.splatoon3_stage"
 ]
