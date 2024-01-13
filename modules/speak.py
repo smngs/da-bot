@@ -269,10 +269,16 @@ class Speak(commands.Cog):
         app_commands.Choice(name="ずんだもん（セクシー）", value=5),
         app_commands.Choice(name="ずんだもん（ささやき）", value=22),
         app_commands.Choice(name="ずんだもん（ヒソヒソ）", value=38),
+        app_commands.Choice(name="ずんだもん（ヘロヘロ）", value=75),
+        app_commands.Choice(name="ずんだもん（なみだめ）", value=76),
         app_commands.Choice(name="春日部つむぎ", value=8),
         app_commands.Choice(name="四国めたん", value=2),
-        app_commands.Choice(name="白上虎太郎", value=12),
         app_commands.Choice(name="冥鳴ひまり", value=14),
+        app_commands.Choice(name="中国うさぎ", value=61),
+        app_commands.Choice(name="栗田まろん", value=67),
+        app_commands.Choice(name="白上虎太郎", value=12),
+        app_commands.Choice(name="青山龍星", value=13),
+        app_commands.Choice(name="ちび式じい", value=42),
     ])
     async def send_speak_set(self, ctx: discord.Interaction, speaker: int):
         await ctx.response.defer(ephemeral=True)
