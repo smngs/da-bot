@@ -287,11 +287,11 @@ class Speak(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if type(message.channel) is discord.TextChannel and type(message.guild) is discord.Guild:
+        if (type(message.channel) is discord.TextChannel or type(message.channel) is discord.VoiceChannel) and type(message.guild) is discord.Guild:
             guild_id = message.guild.id
             user_id = message.author.id
 
-            if type(self.watch_channels[guild_id]) is discord.TextChannel and message.channel.name == self.watch_channels[guild_id].name:
+            if message.channel.name == self.watch_channels[guild_id].name:
                 speaker_id = await get_voicevox_speaker(guild_id, user_id)
                 await self.enqueue_message(message.content, guild_id, speaker_id)
 
